@@ -94,3 +94,24 @@ test('getSession returns a copy, not the live object', () => {
   tracker.getSession().queueName = 'mutated';
   assert.strictEqual(tracker.getSession().queueName, null);
 });
+
+test('a TFT game is labelled from its process, with no launcher API', () => {
+  // TFT's own executable identifies the game, so type-specific reminders work
+  // even with the launcher closed -- which the shared client could never do.
+  const tracker = new SessionTracker({ missTolerance: 0 });
+  const events = tracker.observe(
+    { pid: 7, name: 'TFTClient-Win64-Shipping.exe', gameType: 'tft' },
+    1000,
+  );
+  assert.strictEqual(events.length, 1);
+  assert.strictEqual(events[0].type, 'start');
+  assert.strictEqual(events[0].session.isTFT, true);
+});
+
+test('a League game stays unlabelled until the launcher says otherwise', () => {
+  const tracker = new SessionTracker({ missTolerance: 0 });
+  const events = tracker.observe({ pid: 8, name: 'League of Legends.exe', gameType: 'lol' }, 1000);
+  // One client serves every League mode, so the process cannot rule out TFT
+  // on its own; guessing here would mislabel games when the LCU is unavailable.
+  assert.strictEqual(events[0].session.isTFT, null);
+});

@@ -90,7 +90,10 @@ class SessionTracker {
       // Filled in from the League Client API while the game is live.
       queueName: null,
       gameMode: null,
-      isTFT: null,
+      // TFT ships its own executable, so its type is known from the process
+      // alone -- no launcher required. League still shares one client across
+      // its modes, so a "lol" process leaves this null for the LCU to confirm.
+      isTFT: gameProcess.gameType === 'tft' ? true : null,
     };
     return { type: 'start', session: { ...this.session } };
   }
