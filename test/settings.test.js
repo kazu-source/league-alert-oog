@@ -64,3 +64,15 @@ test('merging is idempotent', () => {
   const once = mergeSettings({ pollIntervalMs: 7000 });
   assert.deepStrictEqual(mergeSettings(once), once);
 });
+
+test('popup dismiss time is clamped and falls back on junk', () => {
+  assert.strictEqual(mergeSettings({}).popupDismissSeconds, DEFAULT_SETTINGS.popupDismissSeconds);
+  // 0 is meaningful here — it means "stay until clicked" — so it must survive.
+  assert.strictEqual(mergeSettings({ popupDismissSeconds: 0 }).popupDismissSeconds, 0);
+  assert.strictEqual(mergeSettings({ popupDismissSeconds: 999 }).popupDismissSeconds, 120);
+  assert.strictEqual(mergeSettings({ popupDismissSeconds: -5 }).popupDismissSeconds, 0);
+  assert.strictEqual(
+    mergeSettings({ popupDismissSeconds: null }).popupDismissSeconds,
+    DEFAULT_SETTINGS.popupDismissSeconds,
+  );
+});

@@ -7,6 +7,7 @@ const { GameWatcher } = require('../core/watcher');
 const { planNotifications, formatDuration } = require('../core/reminderPlanner');
 const { Store } = require('./store');
 const { Notifier } = require('./notifier');
+const { PopupWindow, dismissAll } = require('./popup');
 
 const ASSETS = path.join(__dirname, '..', '..', 'assets');
 
@@ -76,7 +77,9 @@ function buildState() {
     platform: process.platform,
     version: app.getVersion(),
     configPath: store.file,
-    notificationsSupported: Notification.isSupported(),
+    // Reminders are in-app windows, so they work regardless of OS toast settings.
+    notificationsSupported: true,
+    nativeToastsSupported: Notification.isSupported(),
     pendingReminders: notifier.pendingCount,
   };
 }
@@ -195,6 +198,8 @@ async function handleGameEnd(session) {
 
 function handleGameStart(session) {
   console.log(`[league-alert] game started (pid ${session.pid})`);
+  // A reminder still on screen is stale the moment the next game loads.
+  dismissAll();
   if (store.getSettings().cancelPendingOnNewGame) {
     const dropped = notifier.cancelPending();
     if (dropped > 0) console.log(`[league-alert] cancelled ${dropped} pending reminder(s)`);
@@ -234,6 +239,11 @@ function registerIpc() {
 
   ipcMain.handle('settings:save', (_event, patch) => applySettings(patch));
 
+  ipcMain.on('popup:dismiss', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win && !win.isDestroyed()) win.close();
+  });
+
   ipcMain.handle('notify:test', () => {
     sendTestNotification();
     return true;
@@ -272,8 +282,15 @@ async function startApp() {
   const settings = store.getSettings();
 
   notifier = new Notifier({
+    // Reminders are drawn by the app itself rather than handed to the OS. See
+    // src/main/popup.js: Windows' global "turn off notifications" switch would
+    // otherwise discard every reminder with no way to detect it.
     createNotification: (options) =>
-      new Notification({ ...options, icon: path.join(ASSETS, 'icon.png') }),
+      new PopupWindow({
+        ...options,
+        autoDismissMs: store.getSettings().popupDismissSeconds * 1000,
+        iconPath: path.join(ASSETS, 'icon.png'),
+      }),
     onShow: () => pushState(),
   });
 
