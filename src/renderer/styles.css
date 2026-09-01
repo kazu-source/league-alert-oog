@@ -1,0 +1,391 @@
+:root {
+  --bg: #0a1428;
+  --panel: #10203a;
+  --panel-2: #0d1a30;
+  --border: #1e3358;
+  --gold: #c8aa6e;
+  --gold-dim: #937a45;
+  --text: #e6ebf5;
+  --muted: #8fa2c0;
+  --green: #4ade80;
+  --amber: #fbbf24;
+  --red: #f87171;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 18px;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+h2 {
+  font-size: 13px;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+}
+
+p {
+  margin: 0;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+main {
+  flex: 1;
+  padding: 20px 24px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.warning {
+  color: var(--amber);
+  font-size: 12px;
+}
+
+/* ---------------------------------------------------------------- status */
+
+.status-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex: none;
+}
+
+.status-dot.idle {
+  background: var(--gold-dim);
+}
+.status-dot.ingame {
+  background: var(--green);
+  box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.15);
+}
+.status-dot.paused {
+  background: var(--muted);
+}
+.status-dot.error {
+  background: var(--red);
+}
+
+.status-text {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.status-detail {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.status-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.pill.on {
+  color: var(--text);
+  border-color: var(--gold-dim);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.flash {
+  color: var(--green);
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.flash.show {
+  opacity: 1;
+}
+
+/* -------------------------------------------------------------- reminders */
+
+.reminder {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.reminder:first-child {
+  border-top: none;
+}
+
+.reminder input[type="text"] {
+  width: 100%;
+}
+
+.reminder .num {
+  width: 66px;
+}
+
+.reminder-label {
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.empty {
+  color: var(--muted);
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+/* ----------------------------------------------------------------- inputs */
+
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 7px 9px;
+  font: inherit;
+  font-size: 13px;
+}
+
+textarea {
+  resize: vertical;
+  width: 100%;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+input[type="checkbox"] {
+  accent-color: var(--gold);
+  width: 15px;
+  height: 15px;
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px 20px;
+}
+
+.check,
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.field {
+  justify-content: space-between;
+}
+
+.field.stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.field.stacked span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.with-unit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.with-unit input {
+  width: 90px;
+}
+
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+button {
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 6px;
+  border: 1px solid var(--gold-dim);
+  background: transparent;
+  color: var(--gold);
+  padding: 7px 14px;
+}
+
+button:hover {
+  background: rgba(200, 170, 110, 0.12);
+}
+
+button.quiet {
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+button.icon {
+  border: none;
+  color: var(--muted);
+  padding: 4px 8px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+button.icon:hover {
+  color: var(--red);
+  background: none;
+}
+
+button.link {
+  border: none;
+  color: var(--muted);
+  padding: 4px 6px;
+}
+
+button.link:hover {
+  color: var(--text);
+  background: none;
+  text-decoration: underline;
+}
+
+button.link.danger:hover {
+  color: var(--red);
+}
+
+/* ---------------------------------------------------------------- history */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 500;
+  padding: 4px 8px 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid rgba(30, 51, 88, 0.5);
+}
+
+td.muted {
+  color: var(--muted);
+}
+
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 24px;
+  color: var(--muted);
+  font-size: 11.5px;
+  border-top: 1px solid var(--border);
+}
+
+.footer-actions {
+  display: flex;
+  gap: 4px;
+}
+
+#footer-info {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

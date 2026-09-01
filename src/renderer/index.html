@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:"
+    />
+    <title>League Alert OOG</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <h1>League Alert OOG</h1>
+        <p class="subtitle">Reminders the moment a League or TFT game closes.</p>
+      </div>
+      <label class="switch" title="Pause or resume process watching">
+        <input type="checkbox" id="watch-enabled" />
+        <span>Watching</span>
+      </label>
+    </header>
+
+    <main>
+      <section class="card status-card">
+        <div class="status-line">
+          <span class="status-dot" id="status-dot"></span>
+          <div>
+            <p class="status-text" id="status-text">Starting…</p>
+            <p class="status-detail" id="status-detail"></p>
+          </div>
+        </div>
+        <div class="status-meta" id="status-meta"></div>
+        <div class="row">
+          <button id="test-notification" class="secondary">Send a test reminder</button>
+          <span class="flash" id="flash"></span>
+        </div>
+        <p class="warning" id="notification-warning" hidden>
+          Your system is not accepting desktop notifications for this app. Check your OS
+          notification settings.
+        </p>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Reminders</h2>
+          <button id="add-reminder" class="secondary">Add reminder</button>
+        </div>
+        <p class="hint">
+          Each enabled reminder becomes one notification after a game ends. “Applies to” needs the
+          League launcher open — that is what tells League and TFT apart.
+        </p>
+        <div id="reminders"></div>
+      </section>
+
+      <section class="card">
+        <h2>Notifications</h2>
+        <div class="grid">
+          <label class="check"><input type="checkbox" data-setting="notifyForLoL" /> Remind after League games</label>
+          <label class="check"><input type="checkbox" data-setting="notifyForTFT" /> Remind after TFT games</label>
+          <label class="check"><input type="checkbox" data-setting="showGameSummary" /> Show a game summary first</label>
+          <label class="check"><input type="checkbox" data-setting="playSound" /> Play the notification sound</label>
+          <label class="check">
+            <input type="checkbox" data-setting="cancelPendingOnNewGame" /> Cancel delayed reminders if a new game starts
+          </label>
+        </div>
+        <label class="field">
+          <span>Ignore games shorter than</span>
+          <span class="with-unit"><input type="number" min="0" max="3600" data-setting="minGameSeconds" /> seconds</span>
+        </label>
+      </section>
+
+      <section class="card">
+        <h2>Detection</h2>
+        <div class="grid">
+          <label class="field">
+            <span>Check for the game every</span>
+            <span class="with-unit"><input type="number" min="1000" max="60000" step="500" data-setting="pollIntervalMs" /> ms</span>
+          </label>
+          <label class="field">
+            <span>Tolerate missed scans</span>
+            <span class="with-unit"><input type="number" min="0" max="10" data-setting="missTolerance" /> scans</span>
+          </label>
+        </div>
+        <label class="check">
+          <input type="checkbox" data-setting="useLcu" /> Ask the League launcher what is being played
+          (labels games as League or TFT)
+        </label>
+        <label class="field stacked">
+          <span>Extra process names to treat as the game client (one per line)</span>
+          <textarea id="extra-processes" rows="2" placeholder="only needed for unusual installs"></textarea>
+        </label>
+      </section>
+
+      <section class="card">
+        <h2>Application</h2>
+        <div class="grid">
+          <label class="check"><input type="checkbox" data-setting="launchAtLogin" /> Start when I log in</label>
+          <label class="check"><input type="checkbox" data-setting="startMinimized" /> Start hidden in the tray</label>
+        </div>
+        <p class="hint" id="login-hint" hidden>Launching at login is not supported on Linux builds.</p>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Recent games</h2>
+          <button id="clear-history" class="secondary quiet">Clear</button>
+        </div>
+        <div id="history"></div>
+      </section>
+    </main>
+
+    <footer>
+      <span id="footer-info"></span>
+      <span class="footer-actions">
+        <button id="open-config" class="link">Show config file</button>
+        <button id="quit" class="link danger">Quit</button>
+      </span>
+    </footer>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>
