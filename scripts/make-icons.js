@@ -167,6 +167,46 @@ function drawClock(size, { background, foreground }) {
   return downsample(canvas, SS);
 }
 
+/**
+ * Pack PNG frames into a Windows .ico.
+ *
+ * Windows shortcuts and the taskbar want an .ico, and Vista onwards accepts
+ * PNG-compressed frames, so the encoder above is reused as-is: the container is
+ * just a 6-byte header plus one 16-byte directory entry per frame.
+ *
+ * Multiple sizes are embedded so Windows picks the right one rather than
+ * scaling 256px down to 16px, which turns the clock hands to mush.
+ */
+function encodeIco(images) {
+  const frames = images.map((image) => encodePng(image));
+
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0); // reserved
+  header.writeUInt16LE(1, 2); // 1 = icon
+  header.writeUInt16LE(frames.length, 4);
+
+  let offset = 6 + frames.length * 16;
+  const entries = [];
+
+  for (const [index, png] of frames.entries()) {
+    const { size } = images[index];
+    const entry = Buffer.alloc(16);
+    // 256 is stored as 0 — the field is a single byte.
+    entry.writeUInt8(size >= 256 ? 0 : size, 0);
+    entry.writeUInt8(size >= 256 ? 0 : size, 1);
+    entry.writeUInt8(0, 2); // palette colours (0 = truecolour)
+    entry.writeUInt8(0, 3); // reserved
+    entry.writeUInt16LE(1, 4); // colour planes
+    entry.writeUInt16LE(32, 6); // bits per pixel
+    entry.writeUInt32LE(png.length, 8);
+    entry.writeUInt32LE(offset, 12);
+    entries.push(entry);
+    offset += png.length;
+  }
+
+  return Buffer.concat([header, ...entries, ...frames]);
+}
+
 const assetsDir = path.join(__dirname, '..', 'assets');
 fs.mkdirSync(assetsDir, { recursive: true });
 
@@ -183,3 +223,12 @@ for (const [name, image] of outputs) {
   fs.writeFileSync(file, encodePng(image));
   console.log(`wrote ${path.relative(process.cwd(), file)} (${image.size}x${image.size})`);
 }
+
+// Windows shortcut / taskbar icon.
+const icoFile = path.join(assetsDir, 'icon.ico');
+const icoSizes = [16, 24, 32, 48, 64, 128, 256];
+fs.writeFileSync(
+  icoFile,
+  encodeIco(icoSizes.map((size) => drawClock(size, { background: true, foreground: GOLD }))),
+);
+console.log(`wrote ${path.relative(process.cwd(), icoFile)} (${icoSizes.join(', ')})`);
