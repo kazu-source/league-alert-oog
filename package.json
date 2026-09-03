@@ -5,6 +5,7 @@
   "description": "Desktop reminders that fire the moment a League of Legends or Teamfight Tactics game ends.",
   "license": "MIT",
   "main": "src/main/main.js",
+  "author": "kazu-source",
   "scripts": {
     "start": "electron .",
     "test": "node --test test/*.test.js",
@@ -20,6 +21,7 @@
   "build": {
     "appId": "com.kazusource.leaguealertoog",
     "productName": "League Alert OOG",
+    "copyright": "Copyright © 2026 kazu-source",
     "files": [
       "src/**/*",
       "assets/**/*",
@@ -29,11 +31,16 @@
       "target": [
         "nsis"
       ],
-      "icon": "assets/icon.png"
+      "icon": "assets/icon.ico"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "League Alert OOG",
+      "artifactName": "LeagueAlertOOG-Setup-${version}.${ext}",
+      "uninstallDisplayName": "League Alert OOG ${version}"
     },
     "mac": {
       "target": [

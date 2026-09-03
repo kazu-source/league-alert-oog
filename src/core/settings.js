@@ -64,6 +64,9 @@ const DEFAULT_SETTINGS = {
   showGameSummary: true,
   playSound: true,
   cancelPendingOnNewGame: true,
+  // Reminders are drawn by the app, not the OS, so the app owns how long they
+  // stay on screen. 0 keeps a reminder up until it is clicked.
+  popupDismissSeconds: 8,
 
   // App behaviour
   launchAtLogin: false,
@@ -78,6 +81,7 @@ const LIMITS = {
   pollIntervalMs: { min: 1000, max: 60000 },
   missTolerance: { min: 0, max: 10 },
   minGameSeconds: { min: 0, max: 3600 },
+  popupDismissSeconds: { min: 0, max: 120 },
   delaySeconds: { min: 0, max: 24 * 60 * 60 },
   everyNGames: { min: 1, max: 100 },
 };
@@ -173,6 +177,7 @@ function mergeSettings(stored) {
     notifyForTFT: asBool(raw.notifyForTFT, d.notifyForTFT),
     showGameSummary: asBool(raw.showGameSummary, d.showGameSummary),
     playSound: asBool(raw.playSound, d.playSound),
+    popupDismissSeconds: clampInt(raw.popupDismissSeconds, d.popupDismissSeconds, LIMITS.popupDismissSeconds),
     cancelPendingOnNewGame: asBool(raw.cancelPendingOnNewGame, d.cancelPendingOnNewGame),
 
     launchAtLogin: asBool(raw.launchAtLogin, d.launchAtLogin),

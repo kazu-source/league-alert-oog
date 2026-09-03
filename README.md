@@ -4,8 +4,11 @@ A small desktop app that fires your own reminders **the moment a League of Legen
 Teamfight Tactics game ends** — the instant the game client closes, not when you close
 the launcher and not on a timer.
 
-It lives in the tray, watches for the game client process, and shows a native desktop
-notification for each reminder you have configured.
+It lives in the tray, watches for the game client process, and pops up a reminder card
+for each reminder you have configured.
+
+Reminders are drawn by the app itself rather than handed to Windows' notification centre,
+so they still appear if you keep system notifications switched off.
 
 ## How it detects "game over"
 
@@ -30,7 +33,25 @@ simply say "Game finished" instead of "TFT game finished".
 Nothing is sent off your machine — no network calls beyond `127.0.0.1`, no accounts,
 no telemetry.
 
-## Install and run
+## Download
+
+Grab the installer from the [Releases page](https://github.com/kazu-source/league-alert-oog/releases)
+and run it. Windows only for now; it installs per-user, so no admin prompt.
+
+### "Windows protected your PC"
+
+You will see a blue SmartScreen dialog on first run. **This is expected.** The installer is
+not code-signed — a signing certificate costs a few hundred dollars a year, and this is a
+free hobby project.
+
+To continue: click **More info**, then **Run anyway**.
+
+If you would rather not take that on faith, the app is auditable: all the source is in this
+repo, it makes no network calls beyond `127.0.0.1` (the local League client), has no
+accounts or telemetry, and you can build your own installer from source with the commands
+below — a build you make yourself skips the warning entirely on your own machine.
+
+## Install and run from source
 
 ```bash
 npm install
@@ -44,7 +65,14 @@ npm run dist:win    # NSIS installer  (build on Windows)
 npm run dist:mac    # DMG             (build on macOS)
 ```
 
-`electron-builder` writes to `dist/`. Build on the platform you are targeting.
+`electron-builder` writes to `dist/` — the Windows build produces
+`LeagueAlertOOG-Setup-<version>.exe` (~106 MB; Electron bundles its own Chromium runtime).
+Build on the platform you are targeting: Windows installers cannot be produced on macOS or
+vice versa.
+
+The installer adds Desktop and Start Menu shortcuts, and lets the user choose the install
+directory. Builds are unsigned unless you supply a certificate — see
+[electron-builder's code signing docs](https://www.electron.build/code-signing).
 
 ## Using it
 
@@ -55,14 +83,19 @@ tray menu has status, a watching on/off toggle, a test reminder, and quit.
 
 | Field | What it does |
 |---|---|
-| Text | What the notification says. |
+| Text | What the reminder card says. |
 | Applies to | Any game, League only, or TFT only. Type-specific reminders need the launcher open (see above); when the type is unknown they stay quiet rather than guess. |
 | Delay (s) | Wait this long after the game ends. Delayed reminders are cancelled if you start another game, so "stretch in 5 minutes" never pops up mid-match. |
 | Every N games | Fire only every Nth game — useful for "you have played 3 in a row, take a real break". |
 
-**Notifications** — mute League or TFT independently, toggle the game-summary
-notification (queue name + game length), toggle the notification sound, and ignore games
-shorter than N seconds so a crash or an instant dodge does not count.
+**Notifications** — mute League or TFT independently, toggle the game-summary card
+(queue name + game length), toggle the sound, and ignore games shorter than N seconds so a
+crash or an instant dodge does not count.
+
+Reminder cards slide in above the tray, play a short cue, and dismiss themselves after
+`popupDismissSeconds` (default 8; set it to `0` in the config file to keep a card up until
+you click it). They never take focus, so a reminder cannot pull you out of a game or eat
+your keystrokes.
 
 **Detection** — poll interval, how many missed scans to tolerate before calling a game
 over, whether to use the launcher API, and extra process names for unusual installs.
@@ -88,9 +121,11 @@ logged as "skipped — too short" means it was under your minimum length.
 It only answers while the launcher is open; keep *Ask the League launcher what is being
 played* enabled and the launcher running. Everything else still works.
 
-**Nothing shows up at all.** The window warns you if the OS is refusing notifications for
-this app; allow them in Windows Settings → Notifications, or macOS System Settings →
-Notifications.
+**Nothing shows up at all.** Reminder cards are drawn by the app, so Windows' notification
+settings do not affect them — leaving system notifications off is fine. Check instead that
+*Watch for games* is enabled in the tray menu, and use **Send a test reminder** there to
+confirm cards appear. If a test card shows but real games produce nothing, the game is
+probably being logged as too short (see *Recent games*).
 
 ## Platform support
 
@@ -110,9 +145,10 @@ Layout:
 ```
 src/core/      platform + Electron-free logic — process scanning, game detection,
                the session state machine, the launcher API client, reminder planning
-src/main/      Electron main process: window, tray, persistence, notification queue
-src/preload/   the only renderer → main bridge
-src/renderer/  settings UI (vanilla HTML/CSS/JS, no build step)
+src/main/      Electron main process: window, tray, persistence, reminder queue,
+               and popup.js — the in-app reminder cards
+src/preload/   the renderer → main bridges (settings window and popups)
+src/renderer/  settings UI and the popup card (vanilla HTML/CSS/JS, no build step)
 test/          unit tests for everything under src/core and the main-process helpers
 ```
 

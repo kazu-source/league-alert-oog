@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'self'" />
+    <title>Reminder</title>
+    <style>
+      :root {
+        --gold: #c8aa6e;
+        --ink: #f0e6d2;
+        --muted: #a09b8c;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: transparent;
+        overflow: hidden;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        /* The window is click-through-free but never focusable, so text
+           selection would only ever be an accident. */
+        user-select: none;
+        cursor: default;
+      }
+
+      #card {
+        position: relative;
+        height: 100%;
+        display: flex;
+        gap: 12px;
+        padding: 14px 16px;
+        border: 1px solid #785a28;
+        border-radius: 10px;
+        background: linear-gradient(160deg, #0a1428 0%, #091428 55%, #0d1b33 100%);
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+        overflow: hidden;
+        transform: translateX(110%);
+        transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), opacity 260ms ease;
+        opacity: 0;
+      }
+
+      #card.in { transform: translateX(0); opacity: 1; }
+      #card.out { transform: translateX(110%); opacity: 0; }
+
+      #accent {
+        flex: 0 0 3px;
+        border-radius: 2px;
+        background: linear-gradient(180deg, var(--gold), #785a28);
+      }
+
+      #content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+
+      #title {
+        margin: 0 0 4px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: var(--gold);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      #body {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.4;
+        color: var(--ink);
+        /* Long reminder text stays readable rather than overflowing the card. */
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      #close {
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        width: 20px;
+        height: 20px;
+        border: 0;
+        padding: 0;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      #close:hover { background: rgba(255, 255, 255, 0.08); color: var(--ink); }
+
+      #progress {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 2px;
+        width: 100%;
+        background: linear-gradient(90deg, var(--gold), #785a28);
+        transform-origin: left center;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #card { transition: none; }
+        #progress { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="card">
+      <div id="accent"></div>
+      <div id="content">
+        <p id="title"></p>
+        <p id="body"></p>
+      </div>
+      <button id="close" type="button" aria-label="Dismiss">&times;</button>
+      <div id="progress"></div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

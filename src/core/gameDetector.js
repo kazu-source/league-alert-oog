@@ -27,13 +27,31 @@
  *  - commandIncludes: every listed substring must appear in the command/path
  */
 const GAME_MATCHERS = {
-  win32: [{ nameEquals: 'league of legends.exe' }],
+  win32: [
+    { nameEquals: 'league of legends.exe', gameType: 'lol' },
+    // TFT moved to its own Unreal Engine client, installed separately under
+    // "Riot Games\Teamfight Tactics\<Live|PBE>". Its process is unrelated to
+    // "League of Legends.exe", so before this it was invisible to detection --
+    // TFT games produced no reminder at all.
+    //
+    // Two executables ship there: TFTClient.exe is Unreal's BootstrapPackagedGame
+    // shim, which exits moments after launching the real client, so watching it
+    // would end a "game" seconds after it began. The Shipping binary is the one
+    // that lives for the whole match.
+    { nameEquals: 'tftclient-win64-shipping.exe', gameType: 'tft' },
+  ],
   // The launcher lives at .../League of Legends.app/Contents/MacOS/... while the
   // game lives under .../Contents/LoL/Game/..., so "/game/" is what separates them.
-  darwin: [{ nameEquals: 'league of legends', commandIncludes: ['/game/'] }],
+  darwin: [
+    { nameEquals: 'league of legends', commandIncludes: ['/game/'], gameType: 'lol' },
+    { nameIncludes: 'tftclient', gameType: 'tft' },
+  ],
   // League only runs on Linux under Wine/Proton, where the Windows exe name
   // shows up inside the wine command line.
-  linux: [{ commandIncludes: ['league of legends.exe'] }],
+  linux: [
+    { commandIncludes: ['league of legends.exe'], gameType: 'lol' },
+    { commandIncludes: ['tftclient-win64-shipping.exe'], gameType: 'tft' },
+  ],
 };
 
 const CLIENT_MATCHERS = {
@@ -58,7 +76,17 @@ const CLIENT_MATCHERS = {
  * Never treat these as the game client, whatever else matched. Guards against a
  * launcher process whose command line happens to mention the game executable.
  */
-const NEVER_GAME = ['leagueclient.exe', 'leagueclientux', 'riotclientservices', 'riotclientux'];
+const NEVER_GAME = [
+  'leagueclient.exe',
+  'leagueclientux',
+  'riotclientservices',
+  'riotclientux',
+  // Unreal's bootstrap shim and helpers, which come and go independently of the
+  // match: treating any of them as the game would end it early.
+  'tftclient.exe',
+  'epicwebhelper',
+  'crashpad_handler',
+];
 
 function lower(value) {
   return typeof value === 'string' ? value.toLowerCase() : '';
@@ -80,6 +108,23 @@ function matches(record, matcher) {
 
 function matchesAny(record, matchers) {
   return matchers.some((matcher) => matches(record, matcher));
+}
+
+/** @returns the first matcher that accepts `record`, or null. */
+function firstMatch(record, matchers) {
+  return matchers.find((matcher) => matches(record, matcher)) || null;
+}
+
+/**
+ * Which game a process is, when the executable itself says so.
+ * @returns {'lol'|'tft'|null} null when the process is not a game client, or
+ * when it is one whose executable is shared between games (the pre-UE5 client,
+ * and any user-supplied extra name) -- there the LCU has to label it.
+ */
+function gameTypeOf(record, platform = process.platform, extraNames = []) {
+  if (!isGameProcess(record, platform, extraNames)) return null;
+  const matcher = firstMatch(record, GAME_MATCHERS[platform] || []);
+  return (matcher && matcher.gameType) || null;
 }
 
 /** User-supplied names from settings, matched against name or command. */
@@ -124,6 +169,7 @@ function findLauncherProcess(records, platform = process.platform) {
 module.exports = {
   GAME_MATCHERS,
   CLIENT_MATCHERS,
+  gameTypeOf,
   isGameProcess,
   isLauncherProcess,
   findGameProcess,

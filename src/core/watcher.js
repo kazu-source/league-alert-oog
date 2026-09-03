@@ -2,7 +2,7 @@
 
 const { EventEmitter } = require('node:events');
 const { scanProcesses } = require('./processScanner');
-const { findGameProcess, findLauncherProcess } = require('./gameDetector');
+const { findGameProcess, findLauncherProcess, gameTypeOf } = require('./gameDetector');
 const { SessionTracker } = require('./sessionTracker');
 const lcuClient = require('./lcu');
 
@@ -104,7 +104,11 @@ class GameWatcher extends EventEmitter {
       // Watching was toggled off (or restarted) while this scan was running.
       if (generation !== this.generation) return;
       const now = this.now();
-      const gameProcess = findGameProcess(records, this.platform, this.settings.extraGameProcessNames);
+      const found = findGameProcess(records, this.platform, this.settings.extraGameProcessNames);
+      // Tag the process with which game it is, where the executable says so.
+      const gameProcess = found
+        ? { ...found, gameType: gameTypeOf(found, this.platform, this.settings.extraGameProcessNames) }
+        : null;
       const launcher = findLauncherProcess(records, this.platform);
 
       this.status.lastScanAt = now;

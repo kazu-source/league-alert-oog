@@ -76,3 +76,49 @@ test('findGameProcess picks the lowest pid so the choice is stable', () => {
   const records = [win('League of Legends.exe', 900), win('League of Legends.exe', 800)];
   assert.strictEqual(detector.findGameProcess(records, 'win32').pid, 800);
 });
+
+/*
+ * TFT moved to its own Unreal Engine client, installed separately from League.
+ * Before that was handled, TFT games matched nothing and produced no reminder
+ * at all -- so these cover the whole process set that install ships.
+ */
+
+test('windows: the TFT Unreal client is detected as a game', () => {
+  const records = [
+    win('LeagueClientUx.exe', 100),
+    win('TFTClient-Win64-Shipping.exe', 200),
+  ];
+  const found = detector.findGameProcess(records, 'win32');
+  assert.strictEqual(found.pid, 200);
+  assert.strictEqual(detector.gameTypeOf(found, 'win32'), 'tft');
+});
+
+test('windows: the TFT bootstrap shim is never the game', () => {
+  // TFTClient.exe is Unreal's BootstrapPackagedGame; it exits moments after
+  // launching the real client, so treating it as the game would fire a
+  // "game over" reminder seconds after TFT started.
+  assert.strictEqual(detector.isGameProcess(win('TFTClient.exe', 1), 'win32'), false);
+  assert.strictEqual(detector.findGameProcess([win('TFTClient.exe', 1)], 'win32'), null);
+});
+
+test('windows: TFT engine helpers are not the game', () => {
+  for (const name of ['EpicWebHelper.exe', 'crashpad_handler.exe']) {
+    assert.strictEqual(detector.isGameProcess(win(name, 1), 'win32'), false, name);
+  }
+});
+
+test('the game type comes from the executable, and is null when shared', () => {
+  // TFT has its own binary, so its type needs no launcher API.
+  assert.strictEqual(detector.gameTypeOf(win('TFTClient-Win64-Shipping.exe', 1), 'win32'), 'tft');
+  // League still shares one client across its modes, so the LCU must label it.
+  assert.strictEqual(detector.gameTypeOf(win('League of Legends.exe', 1), 'win32'), 'lol');
+  // Not a game at all.
+  assert.strictEqual(detector.gameTypeOf(win('LeagueClientUx.exe', 1), 'win32'), null);
+});
+
+test('a TFT and a League client running at once both resolve', () => {
+  // Not a normal state, but the lowest pid must win deterministically rather
+  // than depending on process-list ordering.
+  const records = [win('TFTClient-Win64-Shipping.exe', 300), win('League of Legends.exe', 200)];
+  assert.strictEqual(detector.findGameProcess(records, 'win32').pid, 200);
+});
